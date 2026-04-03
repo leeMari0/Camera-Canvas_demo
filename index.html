@@ -37,9 +37,18 @@
       <span id="statusText">正在初始化...</span>
     </div>
   </div>
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/hands.js" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1675466862/camera_utils.js" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils@0.3.1675466124/drawing_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/hands.js" crossorigin="anonymous" onerror="console.error('Failed to load MediaPipe Hands')"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1675466862/camera_utils.js" crossorigin="anonymous" onerror="console.error('Failed to load Camera Utils')"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils@0.3.1675466124/drawing_utils.js" crossorigin="anonymous" onerror="console.error('Failed to load Drawing Utils')"></script>
+  <script>
+    window.addEventListener('load', () => {
+      console.log('=== MediaPipe 库加载检查 ===');
+      console.log('Hands:', typeof Hands !== 'undefined' ? '✓' : '✗');
+      console.log('Camera:', typeof Camera !== 'undefined' ? '✓' : '✗');
+      console.log('drawConnectors:', typeof drawConnectors !== 'undefined' ? '✓' : '✗');
+      console.log('HAND_CONNECTIONS:', typeof HAND_CONNECTIONS !== 'undefined' ? '✓' : '✗');
+    });
+  </script>
   <script src="app.js"></script>
 </body>
 </html>

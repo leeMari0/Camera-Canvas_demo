@@ -69,24 +69,40 @@ function updateStatus(text) {
 }
 
 function initHands() {
-  hands = new Hands({
-    locateFile: (file) => {
-      return `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/${file}`;
-    }
-  });
+  if (typeof Hands === 'undefined') {
+    console.error('MediaPipe Hands not loaded');
+    updateStatus('❌ 手势识别库未加载，请刷新页面');
+    return;
+  }
   
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  console.log('开始初始化 MediaPipe Hands...');
   
-  hands.setOptions({
-    maxNumHands: 2,
-    modelComplexity: isMobile ? 0 : 1,
-    minDetectionConfidence: 0.6,
-    minTrackingConfidence: 0.5
-  });
-  
-  hands.onResults(onResults);
-  
-  updateStatus('手势绘图已启动');
+  try {
+    hands = new Hands({
+      locateFile: (file) => {
+        const url = `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/${file}`;
+        console.log('Loading:', url);
+        return url;
+      }
+    });
+    
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    
+    hands.setOptions({
+      maxNumHands: 2,
+      modelComplexity: isMobile ? 0 : 1,
+      minDetectionConfidence: 0.6,
+      minTrackingConfidence: 0.5
+    });
+    
+    hands.onResults(onResults);
+    
+    console.log('MediaPipe Hands 配置完成');
+    updateStatus('手势识别已准备就绪');
+  } catch (error) {
+    console.error('MediaPipe Hands 初始化失败:', error);
+    updateStatus('❌ 手势识别初始化失败: ' + error.message);
+  }
 }
 
 async function initCamera() {
@@ -339,6 +355,11 @@ function smoothPoint(point, key) {
 }
 
 function onResults(results) {
+  if (!feedbackCtx || !elements.feedbackCanvas) {
+    console.error('Canvas not initialized');
+    return;
+  }
+  
   feedbackCtx.clearRect(0, 0, elements.feedbackCanvas.width, elements.feedbackCanvas.height);
   
   const handCount = results.multiHandLandmarks ? results.multiHandLandmarks.length : 0;
@@ -350,6 +371,8 @@ function onResults(results) {
     updateStatus('请将手放入画面');
     return;
   }
+  
+  console.log('检测到手势:', handCount, '只手');
   
   if (handCount === 1) {
     handleSingleHand(results.multiHandLandmarks[0]);
@@ -450,15 +473,44 @@ function drawEraserIndicator(point) {
 }
 
 function drawHandSkeleton(landmarks, color = '#00FF00') {
-  drawConnectors(feedbackCtx, landmarks, HAND_CONNECTIONS, {
-    color: color,
-    lineWidth: 2
-  });
+  if (typeof drawConnectors === 'function' && typeof HAND_CONNECTIONS !== 'undefined') {
+    try {
+      drawConnectors(feedbackCtx, landmarks, HAND_CONNECTIONS, {
+        color: color,
+        lineWidth: 2
+      });
+    } catch (e) {
+      console.warn('drawConnectors failed:', e);
+    }
+  } else {
+    console.warn('drawConnectors or HAND_CONNECTIONS not available');
+  }
   
-  drawLandmarks(feedbackCtx, landmarks, {
-    color: '#FF0000',
-    lineWidth: 1,
-    radius: 3
+  if (typeof drawLandmarks === 'function') {
+    try {
+      drawLandmarks(feedbackCtx, landmarks, {
+        color: '#FF0000',
+        lineWidth: 1,
+        radius: 3
+      });
+    } catch (e) {
+      console.warn('drawLandmarks failed:', e);
+    }
+  } else {
+    drawSimpleLandmarks(landmarks);
+  }
+}
+
+function drawSimpleLandmarks(landmarks) {
+  feedbackCtx.fillStyle = '#FF0000';
+  landmarks.forEach(point => {
+    feedbackCtx.beginPath();
+    feedbackCtx.arc(
+      point.x * elements.feedbackCanvas.width,
+      point.y * elements.feedbackCanvas.height,
+      3, 0, Math.PI * 2
+    );
+    feedbackCtx.fill();
   });
 }
 
