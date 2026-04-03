@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#1a1a2e">
+  <title>手势空中绘图</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <div id="toolbar">
+      <div class="tool-group">
+        <label for="colorPicker">颜色:</label>
+        <input type="color" id="colorPicker" value="#ff0000">
+      </div>
+      <div class="tool-group">
+        <label for="brushSize">大小:</label>
+        <input type="range" id="brushSize" min="1" max="50" value="5">
+        <span id="sizeValue">5</span>
+      </div>
+      <div class="tool-group">
+        <button id="clearBtn">清除</button>
+        <button id="saveBtn">保存</button>
+      </div>
+    </div>
+    <div id="canvas-container">
+      <video id="video" autoplay playsinline webkit-playsinline></video>
+      <canvas id="draw"></canvas>
+      <canvas id="feedback"></canvas>
+    </div>
+    <div id="status">
+      <span id="statusText">正在初始化...</span>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/hands.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1675466862/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils@0.3.1675466124/drawing_utils.js" crossorigin="anonymous"></script>
+  <script src="app.js"></script>
+</body>
+</html>
