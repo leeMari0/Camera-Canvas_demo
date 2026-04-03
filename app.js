@@ -135,41 +135,51 @@ async function initCamera() {
       updateStatus('初始化手势识别...');
       
       try {
-        await hands.initialize();
+        const initPromise = hands.initialize();
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('初始化超时')), 10000)
+        );
+        
+        await Promise.race([initPromise, timeoutPromise]);
         updateStatus('手势识别已初始化');
       } catch (handsError) {
         console.error('手势识别初始化失败:', handsError);
-        updateStatus('手势识别加载中...');
+        updateStatus('⚠️ 手势识别加载失败，使用基础模式');
       }
       
       animate();
       
-      camera = new Camera(elements.video, {
-        onFrame: async () => {
-          try {
-            await hands.send({ image: elements.video });
-          } catch (sendError) {
-            console.error('帧处理错误:', sendError);
-          }
-        },
-        width: videoWidth,
-        height: videoHeight
-      });
-      
-      camera.start();
+      try {
+        camera = new Camera(elements.video, {
+          onFrame: async () => {
+            try {
+              await hands.send({ image: elements.video });
+            } catch (sendError) {
+              console.error('帧处理错误:', sendError);
+            }
+          },
+          width: videoWidth,
+          height: videoHeight
+        });
+        
+        camera.start();
+      } catch (cameraError) {
+        console.error('相机启动失败:', cameraError);
+        updateStatus('⚠️ 相机启动失败，请刷新页面');
+      }
       
       if (isIOS) {
         updateStatus('✅ 摄像头已启动 | 建议横屏使用');
       } else if (isMobile) {
         updateStatus('✅ 摄像头已启动 | 保持手机稳定');
       } else {
-        updateStatus('✅ 摄像头已启动');
+        updateStatus('✅ 准备就绪 | 请允许摄像头访问');
       }
     };
     
     elements.video.onerror = (videoError) => {
       console.error('视频错误:', videoError);
-      updateStatus('视频加载错误');
+      updateStatus('❌ 视频加载错误');
     };
     
   } catch (error) {
@@ -195,6 +205,9 @@ async function initCamera() {
     } else if (error.name === 'AbortError') {
       updateStatus('❌ 摄像头访问被中止');
       showMobileTip('摄像头访问被中止\n\n可能原因:\n- 其他应用占用摄像头\n- 系统限制\n\n请关闭其他使用摄像头的应用后重试');
+    } else if (error.name === 'NotReadableError') {
+      updateStatus('❌ 摄像头被占用');
+      showMobileTip('摄像头被其他应用占用\n\n请关闭其他使用摄像头的应用后重试');
     } else {
       updateStatus('❌ 摄像头初始化失败: ' + error.name);
       showMobileTip('摄像头初始化失败\n\n错误: ' + error.name + '\n' + error.message + '\n\n请刷新页面重试');
